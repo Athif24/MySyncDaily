@@ -60,6 +60,10 @@ abstract class TaskRepository {
 
   Future<List<TaskReminder>> getReminders(String taskId);
 
+  /// Seluruh pengingat dari semua tugas (dipakai sinkronisasi jadwal notifikasi
+  /// agar hanya tugas yang punya pengingat yang diproses).
+  Future<List<TaskReminder>> getAllReminders();
+
   /// Mengganti seluruh daftar pengingat milik tugas.
   Future<void> replaceReminders(String taskId, List<TaskReminder> reminders);
 

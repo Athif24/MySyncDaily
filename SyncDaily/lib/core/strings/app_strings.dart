@@ -246,4 +246,75 @@ class AppStrings {
 
   /// Label tanggal kartu catatan untuk catatan yang diperbarui kemarin.
   static const String noteUpdatedYesterday = 'Kemarin';
+
+  // Notifikasi pengingat (F8a).
+  static const String reminderChannelName = 'Pengingat';
+  static const String reminderChannelDescription =
+      'Pengingat tugas, acara, dan milestone.';
+  static const String notificationActionDone = 'Selesai';
+  static const String notificationActionSnooze = 'Tunda 10 menit';
+  static const String notificationSnoozedBody = 'Ditunda 10 menit';
+  static const String notificationTestTitle = 'Uji notifikasi pengingat';
+  static const String notificationTestBody =
+      'Notifikasi uji berhasil dijadwalkan.';
+
+  /// Konfirmasi singkat setelah aksi pada notifikasi.
+  static const String notificationDoneConfirmation = 'Tugas ditandai selesai';
+  static const String notificationSnoozedConfirmation =
+      'Pengingat ditunda 10 menit';
+
+  /// Isi notifikasi pengingat. Contoh: `Pengingat · 10 menit sebelum`.
+  static String reminderNotificationBody(int offsetMinutes) =>
+      '$reminderLabel · ${reminderOffsetLabel(offsetMinutes)}';
+
+  /// Label offset pengingat yang dipakai di notifikasi.
+  static String reminderOffsetLabel(int offsetMinutes) {
+    switch (offsetMinutes) {
+      case 0:
+        return remindOnTime;
+      case 10:
+        return remind10Min;
+      case 60:
+        return remind1Hour;
+      case 1440:
+        return remind1Day;
+      default:
+        return remindMinutesBefore(offsetMinutes);
+    }
+  }
+
+  // Izin notifikasi & alarm tepat waktu (F8a).
+  static const String permissionTitle = 'Izinkan notifikasi';
+  static const String permissionBody =
+      'SyncDaily perlu izin notifikasi agar pengingat tugas, acara, dan '
+      'milestone bisa muncul meski aplikasi sedang ditutup.';
+  static const String permissionExactTitle = 'Izinkan alarm tepat waktu';
+  static const String permissionExactBody =
+      'Agar pengingat muncul tepat pada waktunya, izinkan SyncDaily memakai '
+      'alarm dan pengingat. Tanpa izin ini, pengingat bisa muncul sedikit '
+      'terlambat.';
+  static const String permissionOemNote =
+      'Jika notifikasi tetap tidak muncul, sebagian ponsel (mis. Samsung, '
+      'Xiaomi, Oppo, Vivo) membatasi aplikasi di latar belakang.';
+  static const String permissionOpenSettings = 'Buka pengaturan';
+  static const String permissionLater = 'Nanti';
+
+  // Panduan OEM agar pengingat tidak terlewat.
+  static const String oemGuideLink = 'Panduan agar pengingat tidak terlewat';
+  static const String oemGuideTitle = 'Panduan agar pengingat tidak terlewat';
+  static const String oemGuideIntro =
+      'Sebagian ponsel membatasi aplikasi di latar belakang sehingga '
+      'notifikasi bisa tertunda atau tidak muncul. Lakukan langkah berikut '
+      'pada pengaturan ponsel Anda:';
+  static const List<String> oemGuideSteps = [
+    'Buka Pengaturan ponsel, lalu pilih Aplikasi > SyncDaily.',
+    'Nyalakan Notifikasi untuk SyncDaily.',
+    'Izinkan alarm dan pengingat bila ada pilihannya.',
+    'Matikan pembatasan baterai untuk SyncDaily (pada Samsung: Baterai > '
+        'Batasi penggunaan baterai).',
+    'Pada Samsung, pastikan SyncDaily tidak masuk daftar "Aplikasi tidur" '
+        '(Pengaturan > Baterai > Aplikasi tidur).',
+    'Nyalakan Autostart atau jalankan otomatis untuk SyncDaily bila ada.',
+  ];
+  static const String oemGuideDismiss = 'Mengerti';
 }

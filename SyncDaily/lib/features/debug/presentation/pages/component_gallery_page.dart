@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sync_daily/core/di/injection.dart';
+import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/core/theme/app_colors.dart';
 import 'package:sync_daily/core/theme/app_icons.dart';
 import 'package:sync_daily/core/theme/app_radius.dart';
@@ -19,6 +20,7 @@ import 'package:sync_daily/core/widgets/section_header.dart';
 import 'package:sync_daily/core/widgets/unread_badge.dart';
 import 'package:sync_daily/core/widgets/unread_dot.dart';
 import 'package:sync_daily/features/debug/data/debug_data_seeder.dart';
+import 'package:sync_daily/features/notifications/domain/reminder_notification.dart';
 
 class ComponentGalleryPage extends StatefulWidget {
   const ComponentGalleryPage({super.key});
@@ -45,6 +47,18 @@ class _ComponentGalleryPageState extends State<ComponentGalleryPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Semua data dihapus')),
+    );
+  }
+
+  /// Menjadwalkan notifikasi uji beberapa detik ke depan untuk memeriksa izin
+  /// dan saluran notifikasi tanpa menunggu jadwal pengingat sungguhan.
+  Future<void> _scheduleTestNotification() async {
+    await getIt<ReminderScheduler>().scheduleTest(
+      delay: const Duration(seconds: 10),
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text(AppStrings.notificationTestBody)),
     );
   }
 
@@ -277,6 +291,14 @@ class _ComponentGalleryPageState extends State<ComponentGalleryPage> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: _scheduleTestNotification,
+                    child: const Text(AppStrings.notificationTestTitle),
+                  ),
                 ),
                 const SizedBox(height: 24),
               ],

@@ -83,6 +83,12 @@ class TasksDao extends DatabaseAccessor<AppDatabase> with _$TasksDaoMixin {
         .get();
   }
 
+  /// Seluruh pengingat dari semua tugas. Dipakai sinkronisasi jadwal notifikasi
+  /// agar hanya tugas yang punya pengingat yang diproses.
+  Future<List<TaskReminderRow>> allReminders() {
+    return select(taskReminders).get();
+  }
+
   Future<void> replaceReminders(
     String taskId,
     List<TaskRemindersCompanion> reminders,

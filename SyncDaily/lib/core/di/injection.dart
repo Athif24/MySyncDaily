@@ -7,8 +7,20 @@ import 'package:sync_daily/features/auth/domain/repositories/user_profile_reposi
 import 'package:sync_daily/features/debug/data/debug_data_seeder.dart';
 import 'package:sync_daily/features/notes/data/repositories/note_repository_impl.dart';
 import 'package:sync_daily/features/notes/domain/repositories/note_repository.dart';
+import 'package:sync_daily/features/notifications/data/local_reminder_scheduler.dart';
+import 'package:sync_daily/features/notifications/data/reminder_permissions_impl.dart';
+import 'package:sync_daily/features/notifications/data/reminder_syncing_task_repository.dart';
 import 'package:sync_daily/features/notifications/data/repositories/notification_repository_impl.dart';
+import 'package:sync_daily/features/notifications/domain/app_messenger.dart';
+import 'package:sync_daily/features/notifications/domain/reminder_notification.dart';
+import 'package:sync_daily/features/notifications/domain/reminder_permissions.dart';
+import 'package:sync_daily/features/notifications/domain/reminder_synchronizer.dart';
 import 'package:sync_daily/features/notifications/domain/repositories/notification_repository.dart';
+import 'package:sync_daily/features/notifications/domain/task_detail_opener.dart';
+import 'package:sync_daily/features/notifications/presentation/go_router_task_detail_opener.dart';
+import 'package:sync_daily/features/notifications/presentation/reminder_launch_consumer.dart';
+import 'package:sync_daily/features/notifications/presentation/reminder_response_handler.dart';
+import 'package:sync_daily/features/notifications/presentation/scaffold_messenger_app_messenger.dart';
 import 'package:sync_daily/features/projects/data/repositories/project_repository_impl.dart';
 import 'package:sync_daily/features/projects/domain/repositories/project_repository.dart';
 import 'package:sync_daily/features/tasks/data/repositories/task_repository_impl.dart';
@@ -21,12 +33,42 @@ final getIt = GetIt.instance;
 ///
 /// [database] bisa diisi saat pengujian (mis. database in-memory). Bila null,
 /// database utama perangkat yang dipakai.
-Future<void> configureDependencies({AppDatabase? database}) async {
+///
+/// [reminderScheduler] dan [reminderPermissions] bisa diisi tiruan saat
+/// pengujian agar plugin notifikasi tidak dipanggil; [now] menginjeksi jam.
+Future<void> configureDependencies({
+  AppDatabase? database,
+  ReminderScheduler? reminderScheduler,
+  ReminderPermissions? reminderPermissions,
+  DateTime Function()? now,
+}) async {
   final db = database ?? AppDatabase();
   getIt.registerSingleton<AppDatabase>(db);
 
+  getIt.registerSingleton<ReminderScheduler>(
+    reminderScheduler ?? LocalReminderScheduler(),
+  );
+  getIt.registerLazySingleton<ReminderPermissions>(
+    () => reminderPermissions ?? ReminderPermissionsImpl(),
+  );
+
+  // Repository dasar dipakai penyinkron (baca saja) agar tidak terjadi
+  // rekursi: decorator hanya dipakai oleh UI, bukan oleh penyinkron.
+  final taskRepositoryBase = TaskRepositoryImpl(db.tasksDao, db.projectsDao);
+
+  getIt.registerLazySingleton<ReminderSynchronizer>(
+    () => ReminderSynchronizer(
+      taskRepository: taskRepositoryBase,
+      scheduler: getIt<ReminderScheduler>(),
+      now: now,
+    ),
+  );
+
   getIt.registerLazySingleton<TaskRepository>(
-    () => TaskRepositoryImpl(db.tasksDao, db.projectsDao),
+    () => ReminderSyncingTaskRepository(
+      delegate: taskRepositoryBase,
+      synchronizer: getIt<ReminderSynchronizer>(),
+    ),
   );
   getIt.registerLazySingleton<ProjectRepository>(
     () => ProjectRepositoryImpl(db.projectsDao),
@@ -39,6 +81,28 @@ Future<void> configureDependencies({AppDatabase? database}) async {
   );
   getIt.registerLazySingleton<UserProfileRepository>(
     UserProfileRepositoryImpl.new,
+  );
+
+  getIt.registerLazySingleton<ReminderResponseHandler>(
+    () => ReminderResponseHandler(
+      synchronizer: getIt<ReminderSynchronizer>(),
+      taskRepository: getIt<TaskRepository>(),
+      opener: getIt<TaskDetailOpener>(),
+      messenger: getIt<AppMessenger>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<TaskDetailOpener>(GoRouterTaskDetailOpener.new);
+  getIt.registerLazySingleton<AppMessenger>(
+    ScaffoldMessengerAppMessenger.new,
+  );
+
+  // Membaca notifikasi pembuka aplikasi satu kali saja (lihat kelasnya).
+  getIt.registerLazySingleton<ReminderLaunchConsumer>(
+    () => ReminderLaunchConsumer(
+      scheduler: getIt<ReminderScheduler>(),
+      handler: getIt<ReminderResponseHandler>(),
+    ),
   );
 
   // Keadaan sesi layar (bukan data): tanggal terpilih di Kalender untuk panel

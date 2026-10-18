@@ -12,6 +12,8 @@ import 'package:sync_daily/core/widgets/app_chip.dart';
 import 'package:sync_daily/core/widgets/latar_layar.dart';
 import 'package:sync_daily/core/widgets/section_header.dart';
 import 'package:sync_daily/core/utils/id_date.dart';
+import 'package:sync_daily/features/notifications/domain/reminder_permissions.dart';
+import 'package:sync_daily/features/notifications/presentation/reminder_permission_dialog.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task_enums.dart';
 import 'package:sync_daily/features/tasks/presentation/form/cubit/task_form_cubit.dart';
 import 'package:sync_daily/features/tasks/presentation/form/cubit/task_form_state.dart';
@@ -61,8 +63,15 @@ class _TaskFormView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocListener<TaskFormCubit, TaskFormState>(
       listenWhen: (previous, current) => previous.status != current.status,
-      listener: (context, state) {
-        if (state.status == TaskFormStatus.saved) {
+      listener: (context, state) async {
+        if (state.status != TaskFormStatus.saved) {
+          return;
+        }
+        // Item berpengingat: minta izin notifikasi/alarm tepat waktu dulu.
+        if (state.savedReminderOffsets.isNotEmpty) {
+          await _requestReminderPermissions(context);
+        }
+        if (context.mounted) {
           context.pop(true);
         }
       },
@@ -84,6 +93,34 @@ class _TaskFormView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Meminta izin notifikasi/alarm tepat waktu saat item berpengingat
+  /// disimpan, lalu menampilkan penjelasan (termasuk panduan OEM) bila izin
+  /// belum diberikan. Izin bersifat pilihan: kegagalan di sini tidak
+  /// menghalangi penyimpanan.
+  Future<void> _requestReminderPermissions(BuildContext context) async {
+    try {
+      final permissions = getIt<ReminderPermissions>();
+      final notificationsEnabled =
+          await permissions.ensureNotificationPermission();
+      final exactAlarmsEnabled =
+          notificationsEnabled ? await permissions.canScheduleExactAlarms() : false;
+      if (notificationsEnabled && exactAlarmsEnabled) {
+        return;
+      }
+      if (!context.mounted) {
+        return;
+      }
+      await showReminderPermissionDialog(
+        context,
+        permissions: permissions,
+        notificationsEnabled: notificationsEnabled,
+        exactAlarmsEnabled: exactAlarmsEnabled,
+      );
+    } catch (_) {
+      // Abaikan; penyimpanan tetap dilanjutkan.
+    }
   }
 }
 
@@ -719,6 +756,18 @@ class _ReminderField extends StatelessWidget {
                 onTap: enabled ? () => onToggle(option) : null,
               ),
           ],
+        ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton(
+            onPressed: () => showReminderOemGuideDialog(context),
+            style: TextButton.styleFrom(
+              minimumSize: const Size(0, AppSizes.minTouchTarget),
+              padding: EdgeInsets.zero,
+              alignment: Alignment.centerLeft,
+            ),
+            child: const Text(AppStrings.oemGuideLink),
+          ),
         ),
       ],
     );

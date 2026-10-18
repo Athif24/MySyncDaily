@@ -156,6 +156,12 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
+  Future<List<TaskReminder>> getAllReminders() async {
+    final rows = await _dao.allReminders();
+    return rows.map((row) => row.toEntity()).toList();
+  }
+
+  @override
   Future<void> replaceReminders(
     String taskId,
     List<TaskReminder> reminders,
