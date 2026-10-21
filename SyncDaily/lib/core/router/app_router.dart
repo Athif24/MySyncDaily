@@ -10,6 +10,7 @@ import 'package:sync_daily/features/home/presentation/pages/home_page.dart';
 import 'package:sync_daily/features/notes/presentation/pages/note_detail_page.dart';
 import 'package:sync_daily/features/notes/presentation/pages/note_form_page.dart';
 import 'package:sync_daily/features/notes/presentation/pages/notes_page.dart';
+import 'package:sync_daily/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task_enums.dart';
 import 'package:sync_daily/features/tasks/domain/task_list_filter.dart';
 import 'package:sync_daily/features/tasks/presentation/detail/pages/task_detail_page.dart';
@@ -67,6 +68,13 @@ class AppRouter {
           name: 'debug-components',
           builder: (context, state) => const ComponentGalleryPage(),
         ),
+      // Layar Notifikasi tampil penuh (tanpa navigasi bawah) dan dibuka dari
+      // lonceng Beranda.
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (context, state) => const NotificationsPage(),
+      ),
       GoRoute(
         path: '/tasks',
         name: 'task-list',

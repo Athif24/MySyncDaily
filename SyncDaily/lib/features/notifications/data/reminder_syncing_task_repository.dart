@@ -37,6 +37,9 @@ class ReminderSyncingTaskRepository implements TaskRepository {
   Stream<List<Task>> watchAllTasks() => _delegate.watchAllTasks();
 
   @override
+  Future<List<Task>> getAllTasks() => _delegate.getAllTasks();
+
+  @override
   Future<Task?> getTask(String id) => _delegate.getTask(id);
 
   @override
@@ -112,6 +115,10 @@ class ReminderSyncingTaskRepository implements TaskRepository {
   @override
   Stream<List<TaskRecurrence>> watchRecurrences() =>
       _delegate.watchRecurrences();
+
+  @override
+  Future<List<TaskRecurrence>> getAllRecurrences() =>
+      _delegate.getAllRecurrences();
 
   @override
   Future<void> setRecurrence(String taskId, TaskRecurrence? recurrence) async {

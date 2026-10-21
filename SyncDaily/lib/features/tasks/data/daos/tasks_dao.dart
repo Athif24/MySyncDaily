@@ -18,6 +18,18 @@ class TasksDao extends DatabaseAccessor<AppDatabase> with _$TasksDaoMixin {
         .watch();
   }
 
+  /// Sama dengan [watchActiveTasks] tetapi sekali baca (bukan stream).
+  ///
+  /// Dipakai pekerjaan latar non-reaktif (mis. rekonsiliasi riwayat notifikasi)
+  /// supaya tidak membuka query stream yang meninggalkan timer saat dibatalkan
+  /// di dalam `flutter_test`.
+  Future<List<TaskRow>> allActiveTasks() {
+    return (select(tasks)
+          ..where((t) => t.deletedAt.isNull())
+          ..orderBy([(t) => OrderingTerm.asc(t.dueAt)]))
+        .get();
+  }
+
   Stream<List<TaskRow>> watchTasksByProject(String projectId) {
     return (select(tasks)
           ..where((t) => t.projectId.equals(projectId) & t.deletedAt.isNull())
@@ -113,6 +125,16 @@ class TasksDao extends DatabaseAccessor<AppDatabase> with _$TasksDaoMixin {
     return (select(taskRecurrences)
           ..where((r) => r.taskId.isInQuery(activeTaskIds)))
         .watch();
+  }
+
+  /// Sama dengan [watchRecurrences] tetapi sekali baca (bukan stream).
+  Future<List<TaskRecurrenceRow>> allRecurrences() {
+    final activeTaskIds = selectOnly(tasks)
+      ..addColumns([tasks.id])
+      ..where(tasks.deletedAt.isNull());
+    return (select(taskRecurrences)
+          ..where((r) => r.taskId.isInQuery(activeTaskIds)))
+        .get();
   }
 
   Future<void> upsertRecurrence(TaskRecurrencesCompanion companion) {

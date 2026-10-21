@@ -4,6 +4,7 @@ import 'package:sync_daily/features/auth/domain/entities/user_profile.dart';
 import 'package:sync_daily/features/auth/domain/repositories/user_profile_repository.dart';
 import 'package:sync_daily/features/notes/domain/entities/note.dart';
 import 'package:sync_daily/features/notes/domain/repositories/note_repository.dart';
+import 'package:sync_daily/features/notifications/domain/entities/app_notification.dart';
 import 'package:sync_daily/features/notifications/domain/repositories/notification_repository.dart';
 import 'package:sync_daily/features/projects/domain/repositories/project_repository.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task.dart';
@@ -34,6 +35,16 @@ const _emptySummary = TaskSummary(
 /// sehingga tidak perlu membuka query stream Drift (yang meninggalkan timer
 /// nol-durasi saat dibatalkan di dalam `flutter_test`).
 void registerMockRepositories() {
+  registerFallbackValue(DateTime.utc(2026));
+  registerFallbackValue(
+    AppNotification(
+      id: 'fallback',
+      type: NotificationType.reminder,
+      title: 'fallback',
+      createdAt: DateTime.utc(2026),
+      updatedAt: DateTime.utc(2026),
+    ),
+  );
   final taskRepository = MockTaskRepository();
   when(
     () => taskRepository.watchSummary(
@@ -49,6 +60,14 @@ void registerMockRepositories() {
   when(() => taskRepository.watchRecurrences())
       .thenAnswer((_) => Stream<List<TaskRecurrence>>.value(const []));
 
+  // Dipakai rekonsiliasi riwayat notifikasi (sekali baca, bukan stream).
+  when(() => taskRepository.getAllTasks())
+      .thenAnswer((_) async => const []);
+  when(() => taskRepository.getAllReminders())
+      .thenAnswer((_) async => const []);
+  when(() => taskRepository.getAllRecurrences())
+      .thenAnswer((_) async => const []);
+
   final projectRepository = MockProjectRepository();
   when(() => projectRepository.watchProjectsWithCounts())
       .thenAnswer((_) => Stream.value(const []));
@@ -58,6 +77,16 @@ void registerMockRepositories() {
   final notificationRepository = MockNotificationRepository();
   when(() => notificationRepository.watchUnreadCount())
       .thenAnswer((_) => Stream.value(0));
+  // Dipakai rekonsiliasi riwayat notifikasi.
+  when(() => notificationRepository.insertIfAbsent(any()))
+      .thenAnswer((_) async {});
+  when(
+    () => notificationRepository.pruneHistory(
+      olderThan: any(named: 'olderThan'),
+      keepNewerThan: any(named: 'keepNewerThan'),
+      maxEntries: any(named: 'maxEntries'),
+    ),
+  ).thenAnswer((_) async {});
 
   final userProfileRepository = MockUserProfileRepository();
   when(() => userProfileRepository.watchProfile())

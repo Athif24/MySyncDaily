@@ -57,6 +57,12 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
+  Future<List<Task>> getAllTasks() async {
+    final rows = await _dao.allActiveTasks();
+    return rows.map((row) => row.toEntity()).toList();
+  }
+
+  @override
   Future<Task?> getTask(String id) async {
     final row = await _dao.getById(id);
     return row?.toEntity();
@@ -183,6 +189,12 @@ class TaskRepositoryImpl implements TaskRepository {
     return _dao
         .watchRecurrences()
         .map((rows) => rows.map((row) => row.toEntity()).toList());
+  }
+
+  @override
+  Future<List<TaskRecurrence>> getAllRecurrences() async {
+    final rows = await _dao.allRecurrences();
+    return rows.map((row) => row.toEntity()).toList();
   }
 
   @override

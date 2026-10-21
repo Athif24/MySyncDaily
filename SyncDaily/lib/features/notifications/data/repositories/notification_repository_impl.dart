@@ -23,6 +23,22 @@ class NotificationRepositoryImpl implements NotificationRepository {
       _dao.upsertNotification(notification.toCompanion());
 
   @override
+  Future<void> insertIfAbsent(AppNotification notification) =>
+      _dao.insertIfAbsent(notification.toCompanion());
+
+  @override
+  Future<void> pruneHistory({
+    required DateTime olderThan,
+    required DateTime keepNewerThan,
+    required int maxEntries,
+  }) =>
+      _dao.pruneHistory(
+        olderThan: olderThan,
+        keepNewerThan: keepNewerThan,
+        maxEntries: maxEntries,
+      );
+
+  @override
   Future<void> markRead(String id) => _dao.markRead(id, DateTime.now().toUtc());
 
   @override

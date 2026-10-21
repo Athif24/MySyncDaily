@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:sync_daily/core/strings/app_strings.dart';
+import 'package:sync_daily/features/notifications/domain/notification_history_id.dart';
 import 'package:sync_daily/features/notifications/domain/reminder_notification.dart';
 import 'package:sync_daily/features/notifications/domain/reminder_response_deduplicator.dart';
 import 'package:sync_daily/features/notifications/domain/reminder_synchronizer.dart';
@@ -14,11 +15,14 @@ import '../../../helpers/test_repositories.dart';
 
 void main() {
   late MockTaskRepository repository;
+  late MockNotificationRepository notificationRepository;
   late FakeReminderScheduler scheduler;
   late ReminderSynchronizer synchronizer;
   late FakeTaskDetailOpener opener;
   late FakeAppMessenger messenger;
   late DateTime current;
+
+  final occurrence = DateTime.utc(2026, 10, 16, 8);
 
   Task activeTask() => Task(
         id: 't1',
@@ -35,6 +39,7 @@ void main() {
         taskRepository: repository,
         opener: opener,
         messenger: messenger,
+        notificationRepository: notificationRepository,
         deduplicator: ReminderResponseDeduplicator(now: () => current),
       );
 
@@ -45,6 +50,7 @@ void main() {
   setUp(() {
     current = DateTime(2026, 10, 15, 12, 0);
     repository = MockTaskRepository();
+    notificationRepository = MockNotificationRepository();
     scheduler = FakeReminderScheduler();
     synchronizer = ReminderSynchronizer(
       taskRepository: repository,
@@ -55,7 +61,15 @@ void main() {
     messenger = FakeAppMessenger();
     when(() => repository.setStatus(any(), any())).thenAnswer((_) async {});
     when(() => repository.getTask('t1')).thenAnswer((_) async => activeTask());
+    when(() => notificationRepository.markRead(any())).thenAnswer((_) async {});
   });
+
+  /// Kunci entri riwayat untuk kemunculan di atas.
+  String historyId() => NotificationHistoryId.forReminder(
+        taskId: 't1',
+        reminderId: 'r1',
+        occurrence: occurrence,
+      );
 
   group('ketukan badan notifikasi', () {
     test('ketukan yang sama dua kali hanya membuka detail satu kali', () async {
@@ -166,6 +180,51 @@ void main() {
           .map((notification) => notification.id)
           .toSet();
       expect(snoozeIds, hasLength(1), reason: 'ID tunda sama sehingga menimpa');
+    });
+  });
+
+  group('menandai entri riwayat dibaca', () {
+    test('ketukan badan menandai entri dibaca lalu membuka detail',
+        () async {
+      final handler = buildHandler();
+
+      await handler.handle(ReminderResponse(
+        notificationId: 10,
+        taskId: 't1',
+        reminderId: 'r1',
+        occurrence: occurrence,
+      ));
+
+      verify(() => notificationRepository.markRead(historyId())).called(1);
+      expect(opener.openedTaskIds, ['t1']);
+    });
+
+    test('aksi Selesai menandai entri dibaca', () async {
+      final handler = buildHandler();
+
+      await handler.handle(ReminderResponse(
+        notificationId: 20,
+        taskId: 't1',
+        reminderId: 'r1',
+        occurrence: occurrence,
+        actionId: ReminderAction.done,
+      ));
+
+      verify(() => notificationRepository.markRead(historyId())).called(1);
+    });
+
+    test('notifikasi tunda (tanpa pengingat/kemunculan) tidak menandai apa pun',
+        () async {
+      final handler = buildHandler();
+
+      await handler.handle(const ReminderResponse(
+        notificationId: 30,
+        taskId: 't1',
+        isSnooze: true,
+        actionId: ReminderAction.snooze,
+      ));
+
+      verifyNever(() => notificationRepository.markRead(any()));
     });
   });
 }

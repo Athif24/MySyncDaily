@@ -5,6 +5,7 @@ import 'package:sync_daily/core/di/injection.dart';
 import 'package:sync_daily/core/router/app_router.dart';
 import 'package:sync_daily/core/theme/app_theme.dart';
 import 'package:sync_daily/core/utils/id_date.dart';
+import 'package:sync_daily/features/notifications/domain/notification_history_reconciler.dart';
 import 'package:sync_daily/features/notifications/domain/reminder_notification.dart';
 import 'package:sync_daily/features/notifications/domain/reminder_synchronizer.dart';
 import 'package:sync_daily/features/notifications/presentation/reminder_launch_consumer.dart';
@@ -57,8 +58,14 @@ class _SyncDailyAppState extends State<SyncDailyApp>
     if (!getIt.isRegistered<ReminderScheduler>()) {
       return;
     }
-    // Membaca notifikasi pembuka aplikasi SATU kali saja; panggilan berikutnya
-    // (mis. saat resume) tidak memproses ulang ketukan lama.
+    // 1) Susun riwayat dari pengingat yang sudah berbunyi. HARUS selesai lebih
+    //    dulu (dan tidak boleh berjalan bersamaan) supaya entri sudah terbentuk
+    //    saat respons peluncuran ditandai dibaca; kalau tidak, penandaan bisa
+    //    hilang dan entri tetap tampak belum dibaca. Reconcile menunggu proses
+    //    yang sedang berjalan bila ada (lihat NotificationHistoryReconciler).
+    await getIt<NotificationHistoryReconciler>().reconcile();
+    // 2) Membaca notifikasi pembuka aplikasi SATU kali saja; panggilan
+    //    berikutnya (mis. saat resume) tidak memproses ulang ketukan lama.
     await getIt<ReminderLaunchConsumer>().consume();
     await getIt<ReminderSynchronizer>().resyncAll();
   }

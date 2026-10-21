@@ -12,6 +12,7 @@ import 'package:sync_daily/features/notifications/data/reminder_permissions_impl
 import 'package:sync_daily/features/notifications/data/reminder_syncing_task_repository.dart';
 import 'package:sync_daily/features/notifications/data/repositories/notification_repository_impl.dart';
 import 'package:sync_daily/features/notifications/domain/app_messenger.dart';
+import 'package:sync_daily/features/notifications/domain/notification_history_reconciler.dart';
 import 'package:sync_daily/features/notifications/domain/reminder_notification.dart';
 import 'package:sync_daily/features/notifications/domain/reminder_permissions.dart';
 import 'package:sync_daily/features/notifications/domain/reminder_synchronizer.dart';
@@ -83,12 +84,23 @@ Future<void> configureDependencies({
     UserProfileRepositoryImpl.new,
   );
 
+  // Menyusun riwayat notifikasi dari pengingat yang sudah berbunyi. Membaca
+  // lewat repository dasar (bukan decorator) agar tidak memicu sinkronisasi.
+  getIt.registerLazySingleton<NotificationHistoryReconciler>(
+    () => NotificationHistoryReconciler(
+      taskRepository: taskRepositoryBase,
+      notificationRepository: getIt<NotificationRepository>(),
+      now: now,
+    ),
+  );
+
   getIt.registerLazySingleton<ReminderResponseHandler>(
     () => ReminderResponseHandler(
       synchronizer: getIt<ReminderSynchronizer>(),
       taskRepository: getIt<TaskRepository>(),
       opener: getIt<TaskDetailOpener>(),
       messenger: getIt<AppMessenger>(),
+      notificationRepository: getIt<NotificationRepository>(),
     ),
   );
 

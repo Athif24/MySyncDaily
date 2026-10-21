@@ -267,6 +267,20 @@ class AppStrings {
   static String reminderNotificationBody(int offsetMinutes) =>
       '$reminderLabel · ${reminderOffsetLabel(offsetMinutes)}';
 
+  // Layar Notifikasi (F8b).
+  static const String notificationMarkAllRead = 'Tandai dibaca';
+  static const String notificationKindAll = 'Semua';
+  static const String notificationKindReminder = 'Pengingat';
+  static const String notificationKindDeadline = 'Deadline';
+  static const String notificationEmpty = 'Belum ada notifikasi';
+  static const String notificationEmptyDescription =
+      'Pengingat yang sudah berbunyi akan tampil di sini.';
+  static const String notificationNoMatch = 'Tidak ada notifikasi yang cocok';
+  static const String notificationNoMatchDescription =
+      'Coba pilih jenis notifikasi lain.';
+  static const String notificationGroupToday = 'Hari Ini';
+  static const String notificationGroupYesterday = 'Kemarin';
+
   /// Label offset pengingat yang dipakai di notifikasi.
   static String reminderOffsetLabel(int offsetMinutes) {
     switch (offsetMinutes) {

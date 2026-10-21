@@ -21,6 +21,12 @@ abstract class TaskRepository {
   /// Semua item belum dihapus (dipakai untuk sub-task dan daftar umum).
   Stream<List<Task>> watchAllTasks();
 
+  /// Sekali baca semua item belum dihapus.
+  ///
+  /// Dipakai pekerjaan latar non-reaktif (mis. rekonsiliasi riwayat notifikasi)
+  /// supaya tidak membuka query stream Drift.
+  Future<List<Task>> getAllTasks();
+
   Future<Task?> getTask(String id);
 
   /// Versi reaktif dari [getSummary] untuk Beranda. Memancarkan ulang setiap
@@ -72,6 +78,9 @@ abstract class TaskRepository {
   /// Semua aturan pengulangan milik item yang belum dihapus (dipakai Kalender
   /// untuk memperluas kemunculan tanpa menulis salinan ke database).
   Stream<List<TaskRecurrence>> watchRecurrences();
+
+  /// Sekali baca semua aturan pengulangan item yang belum dihapus.
+  Future<List<TaskRecurrence>> getAllRecurrences();
 
   /// Menyimpan aturan pengulangan. Mengirim `null` menghapus aturan.
   Future<void> setRecurrence(String taskId, TaskRecurrence? recurrence);

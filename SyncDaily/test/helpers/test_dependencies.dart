@@ -8,14 +8,18 @@ import 'fake_reminder_scheduler.dart';
 ///
 /// Penjadwal notifikasi dan izin diganti tiruan agar plugin
 /// `flutter_local_notifications` (yang butuh kanal platform) tidak dipanggil
-/// dari lingkungan pengujian.
-Future<AppDatabase> setUpInMemoryDependencies() async {
+/// dari lingkungan pengujian. [now] menginjeksi jam (mis. untuk rekonsiliasi
+/// riwayat notifikasi).
+Future<AppDatabase> setUpInMemoryDependencies({
+  DateTime Function()? now,
+}) async {
   await getIt.reset();
   final database = AppDatabase(NativeDatabase.memory());
   await configureDependencies(
     database: database,
     reminderScheduler: FakeReminderScheduler(),
     reminderPermissions: FakeReminderPermissions(),
+    now: now,
   );
   return database;
 }

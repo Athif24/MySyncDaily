@@ -15,6 +15,7 @@ import 'package:sync_daily/features/home/presentation/widgets/home_filter_dropdo
 import 'package:sync_daily/features/home/presentation/widgets/home_header.dart';
 import 'package:sync_daily/features/home/presentation/widgets/projects_section.dart';
 import 'package:sync_daily/features/home/presentation/widgets/stat_card.dart';
+import 'package:sync_daily/features/notifications/presentation/notifications_route.dart';
 import 'package:sync_daily/features/projects/domain/entities/project_with_counts.dart';
 
 class HomePage extends StatelessWidget {
@@ -96,6 +97,7 @@ class _HomeView extends StatelessWidget {
                   return _LoadedView(
                     state: state,
                     onShowSoon: () => _showSoon(context),
+                    onOpenNotifications: () => openNotificationsPage(context),
                     onOpenToday: () => context.push('/tasks?filter=today'),
                     onOpenAllTasks: () => context.push('/tasks?filter=all'),
                     onDelete: (item) => _confirmDelete(
@@ -116,6 +118,7 @@ class _HomeView extends StatelessWidget {
 class _LoadedView extends StatelessWidget {
   final HomeState state;
   final VoidCallback onShowSoon;
+  final VoidCallback onOpenNotifications;
   final VoidCallback onOpenToday;
   final VoidCallback onOpenAllTasks;
   final ValueChanged<ProjectWithCounts> onDelete;
@@ -123,6 +126,7 @@ class _LoadedView extends StatelessWidget {
   const _LoadedView({
     required this.state,
     required this.onShowSoon,
+    required this.onOpenNotifications,
     required this.onOpenToday,
     required this.onOpenAllTasks,
     required this.onDelete,
@@ -147,7 +151,7 @@ class _LoadedView extends StatelessWidget {
             userName: state.userName,
             greeting: state.greeting,
             unreadCount: state.unreadCount,
-            onBellTap: onShowSoon,
+            onBellTap: onOpenNotifications,
           ),
           const SizedBox(height: AppSizes.sectionGap),
           SectionHeader(
