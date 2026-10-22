@@ -36,7 +36,9 @@ class SettingsCubit extends Cubit<SettingsState> {
     final old = _repository.settings;
     final clamped = minutes.clamp(0, 1439);
     // (E): build history with OLD hour first, save new, resyncAll(force:true)
-    await _reconciler.reconcile();
+    // Paksa dipakai agar riwayat tidak dilewati throttle 5 detik: tanpa itu,
+    // riwayat yang harus dibangun dengan jam LAMA bisa terlewat.
+    await _reconciler.reconcile(force: true);
     await _repository.update(old.copyWith(allDayReminderHourMinutes: clamped));
     await _synchronizer.resyncAll(force: true);
   }

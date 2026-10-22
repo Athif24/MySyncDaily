@@ -34,7 +34,8 @@ class PlannedReminder {
 /// Aturan (lihat F8a):
 /// - Titik acuan: `startAt` bila ada, jika tidak `dueAt` (sama dengan
 ///   `TaskDateUtils.reminderTimeFor`).
-/// - Item seharian dianggap berbunyi pada 08.00 waktu lokal tanggalnya, lalu
+/// - Item seharian dianggap berbunyi pada jam yang diatur pengguna
+///   ([allDayHourMinutes], bawaan 08.00 waktu lokal tanggalnya), lalu
 ///   dikurangi offset.
 /// - Kemunculan yang waktunya sudah lewat tidak dijadwalkan.
 /// - Hanya kemunculan dalam [defaultWindow] ke depan yang dijadwalkan.
@@ -48,9 +49,6 @@ class ReminderSchedulePlanner {
 
   /// Batas jumlah alarm per tugas.
   static const int defaultMaxPerTask = 64;
-
-  /// Jam bunyi bawaan untuk item seharian.
-  static const int allDayDefaultHour = 8;
 
   static List<PlannedReminder> plan({
     required Task task,

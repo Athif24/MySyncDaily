@@ -48,24 +48,24 @@ class _SettingsPageState extends State<SettingsPage> {
       final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!ok && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.settingsOpenFailed)),
+          const SnackBar(content: Text(AppStrings.settingsOpenFailed)),
         );
         await Clipboard.setData(const ClipboardData(text: url));
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppStrings.settingsCopied)),
+            const SnackBar(content: Text(AppStrings.settingsCopied)),
           );
         }
       }
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppStrings.settingsOpenFailed)),
+        const SnackBar(content: Text(AppStrings.settingsOpenFailed)),
       );
       await Clipboard.setData(const ClipboardData(text: url));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.settingsCopied)),
+          const SnackBar(content: Text(AppStrings.settingsCopied)),
         );
       }
     }
@@ -80,7 +80,7 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             children: [
               Padding(
-                padding: EdgeInsets.all(AppSizes.cardPadding + 4),
+                padding: const EdgeInsets.all(AppSizes.cardPadding + 4),
                 child: Row(
                   children: [
                     IconButton(
@@ -100,7 +100,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.all(AppSizes.cardPadding + 4),
+                  padding: const EdgeInsets.all(AppSizes.cardPadding + 4),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -115,11 +115,11 @@ class _SettingsPageState extends State<SettingsPage> {
                       Text(AppStrings.settingsPermissions, style: AppTypography.textTheme.titleMedium),
                       const SizedBox(height: AppSizes.itemSpacing),
                       ListTile(
-                        title: Text(AppStrings.settingsNotifications),
+                        title: const Text(AppStrings.settingsNotifications),
                         trailing: Text(_notif ? AppStrings.settingsActive : AppStrings.settingsNotActive),
                       ),
                       ListTile(
-                        title: Text(AppStrings.settingsExactAlarm),
+                        title: const Text(AppStrings.settingsExactAlarm),
                         trailing: Text(_exact ? AppStrings.settingsActive : AppStrings.settingsNotActive),
                       ),
                       const Divider(),
@@ -136,11 +136,11 @@ class _SettingsPageState extends State<SettingsPage> {
                       Text(AppStrings.settingsAbout, style: AppTypography.textTheme.titleMedium),
                       const SizedBox(height: AppSizes.itemSpacing),
                       ListTile(
-                        title: Text(AppStrings.settingsAppName),
+                        title: const Text(AppStrings.settingsAppName),
                         trailing: Text(_version.isEmpty ? '-' : _version),
                       ),
                       ListTile(
-                        title: Text(AppStrings.settingsRepository),
+                        title: const Text(AppStrings.settingsRepository),
                         subtitle: const Text('https://github.com/Athif24/MySyncDaily'),
                         onTap: _openRepo,
                       ),
@@ -171,7 +171,7 @@ class _AllDayRow extends StatelessWidget {
     final m = minutes % 60;
     final time = TimeOfDay(hour: h, minute: m);
     return ListTile(
-      title: Text(AppStrings.settingsAllDayTime),
+      title: const Text(AppStrings.settingsAllDayTime),
       trailing: Text(time.format(context)),
       onTap: () async {
         final picked = await showTimePicker(context: context, initialTime: time);

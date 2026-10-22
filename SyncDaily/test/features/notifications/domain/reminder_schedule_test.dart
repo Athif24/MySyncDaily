@@ -226,4 +226,90 @@ void main() {
       expect(first.map((item) => item.id).toSet(), hasLength(first.length));
     });
   });
+
+  group('ReminderSchedulePlanner jam seharian dari pengaturan', () {
+    // Item seharian memakai komponen tanggal occurrence, jadi hasil jamnya
+    // tidak bergantung zona waktu mesin pengujian.
+    Task allDayTask() =>
+        task(dueAt: DateTime.utc(2026, 10, 16), isAllDay: true);
+
+    test('jam bawaan 480 sama dengan perilaku lama (08.00)', () {
+      final planned = ReminderSchedulePlanner.plan(
+        task: allDayTask(),
+        reminders: [reminder('r1', 0)],
+        now: DateTime(2026, 10, 15, 7, 0),
+        allDayHourMinutes: 480,
+      );
+
+      expect(planned, hasLength(1));
+      expect(planned.single.fireAt, DateTime(2026, 10, 16, 8, 0));
+    });
+
+    test('tanpa parameter sama dengan 480', () {
+      final tanpaParameter = ReminderSchedulePlanner.plan(
+        task: allDayTask(),
+        reminders: [reminder('r1', 0)],
+        now: DateTime(2026, 10, 15, 7, 0),
+      );
+      final denganParameter = ReminderSchedulePlanner.plan(
+        task: allDayTask(),
+        reminders: [reminder('r1', 0)],
+        now: DateTime(2026, 10, 15, 7, 0),
+        allDayHourMinutes: 480,
+      );
+
+      expect(
+        tanpaParameter.map((item) => item.fireAt).toList(),
+        orderedEquals(denganParameter.map((item) => item.fireAt).toList()),
+      );
+    });
+
+    test('jam 1230 (20.30) dipakai untuk item seharian', () {
+      final planned = ReminderSchedulePlanner.plan(
+        task: allDayTask(),
+        reminders: [reminder('r1', 0)],
+        now: DateTime(2026, 10, 15, 7, 0),
+        allDayHourMinutes: 1230,
+      );
+
+      expect(planned, hasLength(1));
+      expect(planned.single.fireAt, DateTime(2026, 10, 16, 20, 30));
+    });
+
+    test('batas bawah 0 berarti 00.00', () {
+      final planned = ReminderSchedulePlanner.plan(
+        task: allDayTask(),
+        reminders: [reminder('r1', 0)],
+        now: DateTime(2026, 10, 15, 7, 0),
+        allDayHourMinutes: 0,
+      );
+
+      expect(planned, hasLength(1));
+      expect(planned.single.fireAt, DateTime(2026, 10, 16, 0, 0));
+    });
+
+    test('batas atas 1439 berarti 23.59', () {
+      final planned = ReminderSchedulePlanner.plan(
+        task: allDayTask(),
+        reminders: [reminder('r1', 0)],
+        now: DateTime(2026, 10, 15, 7, 0),
+        allDayHourMinutes: 1439,
+      );
+
+      expect(planned, hasLength(1));
+      expect(planned.single.fireAt, DateTime(2026, 10, 16, 23, 59));
+    });
+
+    test('offset pengingat tetap dikurangi dari jam yang dipilih', () {
+      final planned = ReminderSchedulePlanner.plan(
+        task: allDayTask(),
+        reminders: [reminder('r1', 30)],
+        now: DateTime(2026, 10, 15, 7, 0),
+        allDayHourMinutes: 1230,
+      );
+
+      expect(planned, hasLength(1));
+      expect(planned.single.fireAt, DateTime(2026, 10, 16, 20, 0));
+    });
+  });
 }

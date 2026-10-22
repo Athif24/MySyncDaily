@@ -103,7 +103,7 @@ class FileAppSettingsRepository implements AppSettingsRepository {
     try {
       final file = await _fileObj();
       final dir = file.parent;
-      final tmp = File(p.join(dir.path, _fileName + '.tmp'));
+      final tmp = File(p.join(dir.path, '$_fileName.tmp'));
       final map = <String, Object?>{
         'version': _version,
         'defaultsEnabled': clamped.defaultsEnabled,
@@ -115,9 +115,11 @@ class FileAppSettingsRepository implements AppSettingsRepository {
         'defaultPreReminderMinutes': clamped.defaultPreReminderMinutes,
       };
       await tmp.writeAsString(jsonEncode(map));
-      if (await file.exists()) {
-        await file.delete();
-      }
+      // `File.rename` menimpa berkas yang ada (dokumentasi Dart: "If newPath
+      // identifies an existing file or link, that entity is removed first"),
+      // sehingga berkas utama TIDAK perlu dihapus lebih dulu. Tanpa penghapusan
+      // lebih dulu, tidak ada jeda di mana berkas utama tidak ada; kalau
+      // rename gagal, isi lama tetap utuh.
       await tmp.rename(file.path);
       _settings = clamped;
       _controller.add(_settings);
@@ -129,5 +131,19 @@ class FileAppSettingsRepository implements AppSettingsRepository {
 
   Future<void> dispose() async {
     await _controller.close();
+  }
+
+  @override
+  Future<void> reset() async {
+    _settings = const AppSettings();
+    _controller.add(_settings);
+    try {
+      final file = await _fileObj();
+      if (await file.exists()) {
+        await file.delete();
+      }
+    } catch (_) {
+      // Yang penting: keadaan di memori sudah kembali ke bawaan.
+    }
   }
 }

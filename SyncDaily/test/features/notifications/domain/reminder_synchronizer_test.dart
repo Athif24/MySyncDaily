@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:sync_daily/features/notifications/data/reminder_syncing_task_repository.dart';
@@ -331,6 +333,87 @@ void main() {
       await expectLater(
         repository.replaceReminders('t1', [reminder]),
         completes,
+      );
+    });
+  });
+
+  group('ReminderSynchronizer.resyncAll paksa', () {
+    test('permintaan paksa saat sinkronisasi lain berjalan tidak hilang',
+        () async {
+      stubActiveTask();
+      // Gerbang yang menahan sinkronisasi pertama di tengah jalan.
+      final gate = Completer<void>();
+      var rounds = 0;
+      when(() => readRepository.getAllReminders()).thenAnswer((_) async {
+        rounds++;
+        if (rounds == 1) {
+          await gate.future;
+        }
+        return [reminder];
+      });
+
+      final synchronizer = buildSynchronizer();
+      final first = synchronizer.resyncAll();
+      final second = synchronizer.resyncAll(force: true);
+      gate.complete();
+      await Future.wait([first, second]);
+
+      expect(
+        rounds,
+        2,
+        reason: 'permintaan paksa harus dijalankan sekali lagi setelah '
+            'sinkronisasi yang sedang berjalan selesai',
+      );
+    });
+
+    test('permintaan biasa saat sinkronisasi lain berjalan tidak menambah '
+        'putaran', () async {
+      stubActiveTask();
+      final gate = Completer<void>();
+      var rounds = 0;
+      when(() => readRepository.getAllReminders()).thenAnswer((_) async {
+        rounds++;
+        if (rounds == 1) {
+          await gate.future;
+        }
+        return [reminder];
+      });
+
+      final synchronizer = buildSynchronizer();
+      final first = synchronizer.resyncAll();
+      final second = synchronizer.resyncAll();
+      gate.complete();
+      await Future.wait([first, second]);
+
+      expect(rounds, 1, reason: 'hanya ada satu putaran sinkronisasi');
+    });
+
+    test('putaran tambahan tidak membatalkan notifikasi tunda', () async {
+      stubActiveTask();
+      final gate = Completer<void>();
+      var rounds = 0;
+      when(() => readRepository.getAllReminders()).thenAnswer((_) async {
+        rounds++;
+        if (rounds == 1) {
+          await gate.future;
+        }
+        return [reminder];
+      });
+      scheduler = FakeReminderScheduler(
+        pending: [const PendingReminder(id: 777, taskId: 't1', isSnooze: true)],
+      );
+
+      final synchronizer = buildSynchronizer();
+      final first = synchronizer.resyncAll();
+      final second = synchronizer.resyncAll(force: true);
+      gate.complete();
+      await Future.wait([first, second]);
+
+      expect(rounds, 2);
+      expect(scheduler.cancelled, isNot(contains(777)));
+      expect(
+        scheduler.pending.where((pending) => pending.isSnooze),
+        hasLength(1),
       );
     });
   });

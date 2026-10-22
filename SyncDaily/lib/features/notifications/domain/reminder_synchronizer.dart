@@ -34,7 +34,11 @@ class ReminderSynchronizer {
   final AppSettingsRepository? _settingsRepository;
 
   DateTime? _lastResyncAt;
-  bool _resyncInFlight = false;
+  Future<void>? _activeResync;
+
+  /// Permintaan paksa yang belum sempat dijalankan karena ada sinkronisasi
+  /// lain yang sedang berjalan.
+  bool _forcedResyncQueued = false;
 
   ReminderSynchronizer({
     required TaskRepository taskRepository,
@@ -150,17 +154,63 @@ class ReminderSynchronizer {
   /// notifikasi tertunda), supaya tidak membaca seluruh tugas tiap kali
   /// aplikasi dibuka. Dibatasi frekuensinya ([_minResyncInterval]) dan tidak
   /// menumpuk saat sudah ada sinkronisasi berjalan.
+  ///
+  /// Permintaan paksa ([force]) tidak boleh hilang diam-diam: bila ada
+  /// sinkronisasi lain yang sedang berjalan, permintaan itu dicatat lalu
+  /// dijalankan sekali lagi setelah yang berjalan selesai. Antrean paksa hanya
+  /// punya satu slot, jadi tidak menumpuk lebih dari satu putaran tambahan.
   Future<void> resyncAll({bool force = false}) async {
-    if (_resyncInFlight) {
+    if (force) {
+      _forcedResyncQueued = true;
+    }
+    final active = _activeResync;
+    if (active != null) {
+      // Menunggu proses yang sama (bukan langsung kembali), supaya pemanggil
+      // tahu sinkronisasi benar-benar selesai.
+      await active;
+      // Bila permintaan paksa datang tepat saat putaran berakhir, flag-nya
+      // masih tertunda. Jalankan sekarang supaya tidak menunggu panggilan lain.
+      if (_forcedResyncQueued) {
+        await resyncAll(force: true);
+      }
       return;
     }
+
+    final run = _runResyncLoop();
+    _activeResync = run;
+    try {
+      await run;
+    } finally {
+      if (identical(_activeResync, run)) {
+        _activeResync = null;
+      }
+    }
+  }
+
+  /// Menjalankan sinkronisasi, lalu satu putaran tambahan bila ada permintaan
+  /// paksa yang datang saat putaran berjalan.
+  Future<void> _runResyncLoop() async {
+    var forced = _forcedResyncQueued;
+    _forcedResyncQueued = false;
+    while (true) {
+      await _runResyncOnce(force: forced);
+      if (!_forcedResyncQueued) {
+        return;
+      }
+      // Permintaan paksa yang tertunda: satu putaran tambahan, tanpa
+      // menumpuk lebih dari satu permintaan yang menunggu.
+      _forcedResyncQueued = false;
+      forced = true;
+    }
+  }
+
+  Future<void> _runResyncOnce({required bool force}) async {
     final now = _now();
     final last = _lastResyncAt;
     if (!force && last != null && now.difference(last) < _minResyncInterval) {
       return;
     }
 
-    _resyncInFlight = true;
     try {
       final taskIds = <String>{};
       for (final reminder in await _taskRepository.getAllReminders()) {
@@ -179,8 +229,6 @@ class ReminderSynchronizer {
       _lastResyncAt = now;
     } catch (error) {
       debugPrint('[SyncDaily] Gagal menyelaraskan pengingat: $error');
-    } finally {
-      _resyncInFlight = false;
     }
   }
 
