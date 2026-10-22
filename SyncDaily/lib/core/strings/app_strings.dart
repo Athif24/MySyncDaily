@@ -331,4 +331,39 @@ class AppStrings {
     'Nyalakan Autostart atau jalankan otomatis untuk SyncDaily bila ada.',
   ];
   static const String oemGuideDismiss = 'Mengerti';
+  // Pengaturan (F9a)
+  static const String settingsTitle = 'Pengaturan';
+  static const String settingsReminderDefaults = 'Pengingat Bawaan';
+  static const String settingsAllDayTime = 'Waktu bunyi item seharian';
+  static const String settingsHelpNote = 'Jam seharian berlaku untuk semua item seharian, termasuk yang sudah ada; pilihan bawaan hanya untuk item baru.';
+  static const String settingsForNewOnly = 'Hanya untuk item baru';
+  static const String settingsNoReminder = 'Tanpa pengingat';
+  static const String settingsOnTime = 'Tepat waktu';
+  static const String settingsTenMinutes = '10 menit sebelum';
+  static const String settingsOneHour = '1 jam sebelum';
+  static const String settingsOneDay = '1 hari sebelum';
+  static const String settingsOnDay = 'Pada hari-H';
+  static const String settingsForReminder = 'Pengingat';
+  static const String settingsForEvent = 'Acara';
+  static const String settingsForTask = 'Tugas';
+  static const String settingsForMilestone = 'Milestone';
+  static const String settingsPermissions = 'Status Izin';
+  static const String settingsNotifications = 'Notifikasi';
+  static const String settingsExactAlarm = 'Alarm tepat waktu';
+  static const String settingsActive = 'Aktif';
+  static const String settingsNotActive = 'Tidak aktif';
+  static const String settingsSetUp = 'Atur';
+  static const String settingsOpenSystem = 'Buka pengaturan sistem';
+  static const String settingsGuide = 'Panduan agar pengingat tidak terlewat';
+  static const String settingsGuideLabel = 'Contoh: Samsung (One UI)';
+  static const String settingsAbout = 'Tentang Aplikasi';
+  static const String settingsAppName = 'SyncDaily';
+  static const String settingsVersion = 'Versi';
+  static const String settingsRepository = 'Repositori';
+  static const String settingsCopyLink = 'Salin tautan';
+  static const String settingsCopied = 'Tautan disalin';
+  static const String settingsOpenFailed = 'Tidak dapat membuka tautan';
+  static const String settingsDndNote = 'Jam Tenang: ditunda (rencana lanjutan).';
+  static const String settingsThemeNote = 'Tema: hanya terang (tidak dibuat).';
+
 }

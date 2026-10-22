@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
+import 'package:sync_daily/features/settings/data/file_app_settings_repository.dart';
+import 'package:sync_daily/features/settings/domain/app_settings_repository.dart';
+import 'package:sync_daily/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:sync_daily/core/database/app_database.dart';
 import 'package:sync_daily/core/state/calendar_selection.dart';
 import 'package:sync_daily/features/auth/data/repositories/user_profile_repository_impl.dart';
@@ -62,6 +65,7 @@ Future<void> configureDependencies({
       taskRepository: taskRepositoryBase,
       scheduler: getIt<ReminderScheduler>(),
       now: now,
+      settingsRepository: getIt<AppSettingsRepository>(),
     ),
   );
 
@@ -91,6 +95,7 @@ Future<void> configureDependencies({
       taskRepository: taskRepositoryBase,
       notificationRepository: getIt<NotificationRepository>(),
       now: now,
+      settingsRepository: getIt<AppSettingsRepository>(),
     ),
   );
 
@@ -121,6 +126,18 @@ Future<void> configureDependencies({
   // "Buat Baru". Lihat [CalendarSelection].
   getIt.registerLazySingleton<CalendarSelection>(CalendarSelection.new);
 
+  final settingsRepo = FileAppSettingsRepository();
+  await settingsRepo.init();
+  getIt.registerLazySingleton<AppSettingsRepository>(() => settingsRepo);
+
+  getIt.registerLazySingleton<SettingsCubit>(
+    () => SettingsCubit(
+      repository: getIt<AppSettingsRepository>(),
+      reconciler: getIt<NotificationHistoryReconciler>(),
+      synchronizer: getIt<ReminderSynchronizer>(),
+    ),
+  );
+
   if (kDebugMode) {
     getIt.registerLazySingleton<DebugDataSeeder>(
       () => DebugDataSeeder(
@@ -135,3 +152,4 @@ Future<void> configureDependencies({
     debugPrint('[SyncDaily] SQLite $version siap di perangkat.');
   }
 }
+

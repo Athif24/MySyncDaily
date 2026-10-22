@@ -73,3 +73,10 @@ Font: Plus Jakarta Sans (400, 500, 600, 700, 800). Font DIBUNDEL di `assets/font
 
 ## Layar yang BELUM didesain
 Detail tugas, form tugas/acara/pengingat/milestone, detail proyek, ruang chat, cari pengguna, login/daftar, profil, pengaturan. Untuk layar ini: pakai komponen dan token di atas, jaga konsistensi, dan tandai di kode dengan komentar `TODO(design)`.
+
+## 51. Layar Pengaturan (F9a)
+- Akses lewat ketuk avatar di header Beranda. Rute `/settings` terpisah dari shell.
+- Pengingat bawaan per jenis, jam bunyi item seharian (menit dari tengah malam), status izin, panduan (label contoh Samsung One UI), Tentang aplikasi.
+- Jam Tenang: ditunda (rencana lanjutan). Tema: hanya terang, tidak dibuat (rencana lanjutan).
+- Pengaturan disimpan sebagai JSON di direktori dukungan aplikasi (atomik). Kegagalan baca → bawaan; kegagalan tulis menampilkan snackbar tanpa mengubah nilai tampil.
+- Perubahan jam seharian menerapkan urutan: bangun riwayat dengan jam lama, simpan jam baru, jalankan resync paksa.

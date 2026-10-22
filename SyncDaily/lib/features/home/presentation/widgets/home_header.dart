@@ -1,3 +1,4 @@
+import 'package:sync_daily/core/router/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/core/theme/app_icons.dart';
@@ -26,7 +27,23 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        AppAvatar(name: userName, size: AppSizes.avatar),
+        Semantics(
+          button: true,
+          label: AppStrings.settingsTitle,
+          child: Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () => openSettingsPage(context),
+              child: SizedBox(
+                height: AppSizes.avatar,
+                width: AppSizes.avatar,
+                child: AppAvatar(name: userName, size: AppSizes.avatar),
+              ),
+            ),
+          ),
+        ),
         const SizedBox(width: AppSizes.cardGap),
         Expanded(
           child: Column(

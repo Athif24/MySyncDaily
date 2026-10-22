@@ -1,3 +1,4 @@
+import 'package:sync_daily/features/settings/domain/app_settings_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/features/notifications/domain/reminder_notification.dart';
@@ -30,6 +31,7 @@ class ReminderSynchronizer {
   final Duration _window;
   final int _maxPerTask;
   final Duration _minResyncInterval;
+  final AppSettingsRepository? _settingsRepository;
 
   DateTime? _lastResyncAt;
   bool _resyncInFlight = false;
@@ -41,12 +43,14 @@ class ReminderSynchronizer {
     Duration window = ReminderSchedulePlanner.defaultWindow,
     int maxPerTask = ReminderSchedulePlanner.defaultMaxPerTask,
     Duration minResyncInterval = const Duration(seconds: 5),
+    AppSettingsRepository? settingsRepository,
   })  : _taskRepository = taskRepository,
         _scheduler = scheduler,
         _now = now ?? DateTime.now,
         _window = window,
         _maxPerTask = maxPerTask,
-        _minResyncInterval = minResyncInterval;
+        _minResyncInterval = minResyncInterval,
+        _settingsRepository = settingsRepository;
 
   /// Menyelaraskan notifikasi untuk satu tugas.
   Future<void> syncTask(String taskId) async {
@@ -64,6 +68,7 @@ class ReminderSynchronizer {
       final reminders = await _taskRepository.getReminders(taskId);
       if (reminders.isNotEmpty) {
         final recurrence = await _taskRepository.getRecurrence(taskId);
+        final allDayMinutes = _settingsRepository?.settings.allDayReminderHourMinutes ?? 480;
         desired = ReminderSchedulePlanner.plan(
           task: activeTask,
           reminders: reminders,
@@ -71,6 +76,7 @@ class ReminderSynchronizer {
           now: _now(),
           window: _window,
           maxPerTask: _maxPerTask,
+          allDayHourMinutes: allDayMinutes.clamp(0, 1439),
         );
       }
     }

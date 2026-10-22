@@ -1,3 +1,4 @@
+import 'package:sync_daily/features/settings/domain/app_settings_repository.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -34,6 +35,7 @@ class NotificationHistoryReconciler {
   final Duration _retention;
   final int _maxEntries;
   final Duration _minInterval;
+  final AppSettingsRepository? _settingsRepository;
 
   DateTime? _lastRunAt;
   Future<void>? _active;
@@ -46,13 +48,15 @@ class NotificationHistoryReconciler {
     Duration retention = defaultRetention,
     int maxEntries = defaultMaxEntries,
     Duration minInterval = const Duration(seconds: 5),
+    AppSettingsRepository? settingsRepository,
   })  : _taskRepository = taskRepository,
         _notificationRepository = notificationRepository,
         _now = now ?? DateTime.now,
         _lookback = lookback,
         _retention = retention,
         _maxEntries = maxEntries,
-        _minInterval = minInterval;
+        _minInterval = minInterval,
+        _settingsRepository = settingsRepository;
 
   /// Menyelaraskan riwayat dengan pengingat yang sudah berbunyi.
   ///
@@ -101,6 +105,7 @@ class NotificationHistoryReconciler {
         recurrenceByTask: recurrenceByTask,
         now: now,
         lookback: _lookback,
+        settingsRepository: _settingsRepository,
       );
       for (final entry in entries) {
         await _notificationRepository.insertIfAbsent(entry);

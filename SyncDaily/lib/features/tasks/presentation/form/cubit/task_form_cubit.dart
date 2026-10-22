@@ -45,6 +45,7 @@ class TaskFormCubit extends Cubit<TaskFormState> {
         super(const TaskFormState());
 
   StreamSubscription<List<Project>>? _projectsSub;
+  bool _userTouchedReminders = false;
 
   /// Daftar sub-task yang dimuat dari repository (mode ubah), dipakai untuk
   /// merekonsiliasi saat menyimpan.
@@ -71,8 +72,10 @@ class TaskFormCubit extends Cubit<TaskFormState> {
     );
 
     if (taskId != null) {
+      _userTouchedReminders = true; // editing existing item; don't seed defaults
       await _loadTask(taskId);
     } else {
+      _userTouchedReminders = false;
       _applyTypeDefaults(initialType, isEditing: false);
       if (initialDate != null) {
         _applyInitialDate(initialDate);
@@ -179,6 +182,7 @@ class TaskFormCubit extends Cubit<TaskFormState> {
       }
     }
 
+    _userTouchedReminders = true;
     emit(state.copyWith(
       status: TaskFormStatus.idle,
       isEditing: true,
@@ -294,6 +298,8 @@ class TaskFormCubit extends Cubit<TaskFormState> {
       emit(state.copyWith(recurrence: value));
 
   void toggleReminder(ReminderOption value) {
+    _userTouchedReminders = true;
+    if (_userTouchedReminders) {}
     final set = {...state.reminders};
     if (!set.remove(value)) {
       set.add(value);

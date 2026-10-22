@@ -3,7 +3,7 @@
 ## Cara pakai
 1. File paket ini (docs/ dan AGENTS.md) dibuat oleh prompt setup (PROMPT-SETUP-OpenCode.md). Jika membuat manual: letakkan `docs/` di `MyProject/` dan `AGENTS.md` di `SyncDaily/` dan `BE-SyncDaily/`.
 2. Jalankan OpenCode di folder yang sesuai: `SyncDaily` untuk Flutter, `BE-SyncDaily` untuk BackEnd. Jika OpenCode meminta izin membaca `../docs`, izinkan. Jika ditolak, salin folder `docs` ke dalam folder itu dan ubah rujukan `../docs` menjadi `docs`.
-3. Mulai dengan agent Plan (tombol Tab) untuk melihat rencana, lalu pindah ke Build.
+3. Mulai dengan agent Plan (tombol Tab) untuk melihat rencana, lalu pindah ke Build.cd
 4. Kirim SATU prompt, jalankan aplikasinya, uji, commit ke Git, baru lanjut prompt berikutnya.
 5. Cara cepat: cukup ketik `Kerjakan prompt F0 di ../docs/PROMPTS.md` (ganti F0 sesuai langkah). OpenCode akan membaca prompt itu sendiri.
 6. Jika hasil belum pas, perbaiki dengan prompt kecil ("tombol + kurang naik, samakan dengan DESIGN.md"), jangan menulis ulang semuanya.

@@ -1,3 +1,4 @@
+import 'package:sync_daily/features/settings/domain/app_settings_repository.dart';
 import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/features/notifications/domain/entities/app_notification.dart';
 import 'package:sync_daily/features/notifications/domain/notification_history_id.dart';
@@ -28,6 +29,7 @@ class NotificationHistoryBuilder {
     required Map<String, TaskRecurrence> recurrenceByTask,
     required DateTime now,
     required Duration lookback,
+    AppSettingsRepository? settingsRepository,
   }) {
     final entries = <AppNotification>[];
     for (final task in tasks) {
@@ -42,6 +44,7 @@ class NotificationHistoryBuilder {
           recurrence: recurrenceByTask[task.id],
           now: now,
           lookback: lookback,
+          settingsRepository: settingsRepository,
         ),
       );
     }
@@ -56,6 +59,7 @@ class NotificationHistoryBuilder {
     required TaskRecurrence? recurrence,
     required DateTime now,
     required Duration lookback,
+    AppSettingsRepository? settingsRepository,
   }) {
     if (task.isDeleted || reminders.isEmpty) {
       return const [];
@@ -69,12 +73,14 @@ class NotificationHistoryBuilder {
         ? task.copyWith(status: TaskStatus.todo)
         : task;
 
+    final allDayMinutes = settingsRepository?.settings.allDayReminderHourMinutes ?? 480;
     final planned = ReminderSchedulePlanner.plan(
       task: plannedTask,
       reminders: reminders,
       recurrence: recurrence,
       now: now.subtract(lookback),
       window: lookback,
+      allDayHourMinutes: allDayMinutes.clamp(0, 1439),
     );
 
     final reminderById = <String, TaskReminder>{

@@ -59,6 +59,7 @@ class ReminderSchedulePlanner {
     required DateTime now,
     Duration window = defaultWindow,
     int maxPerTask = defaultMaxPerTask,
+    int allDayHourMinutes = 480,
   }) {
     if (reminders.isEmpty ||
         task.isDeleted ||
@@ -95,7 +96,8 @@ class ReminderSchedulePlanner {
     final seenIds = <int>{};
     for (final occurrence in occurrences) {
       for (final reminder in reminders) {
-        final fireAt = _fireAt(task, occurrence, reminder.offsetMinutes);
+        final fireAt = _fireAt(task, occurrence, reminder.offsetMinutes,
+            allDayHourMinutes: allDayHourMinutes.clamp(0, 1439));
         if (fireAt.isBefore(now) || fireAt.isAfter(windowEnd)) {
           continue;
         }
@@ -126,7 +128,11 @@ class ReminderSchedulePlanner {
   }
 
   /// Waktu notifikasi muncul, dalam waktu lokal perangkat.
-  static DateTime _fireAt(Task task, DateTime occurrence, int offsetMinutes) {
+  static DateTime _fireAt(Task task, DateTime occurrence, int offsetMinutes,
+      {int allDayHourMinutes = 480}) {
+    final minutes = allDayHourMinutes.clamp(0, 1439);
+    final hour = minutes ~/ 60;
+    final minute = minutes % 60;
     final DateTime base;
     if (task.isAllDay) {
       // Komponen tanggal occurrence sudah merupakan tanggal kalender (item
@@ -136,7 +142,8 @@ class ReminderSchedulePlanner {
         occurrence.year,
         occurrence.month,
         occurrence.day,
-        allDayDefaultHour,
+        hour,
+        minute,
       );
     } else {
       base = occurrence.toLocal();
