@@ -354,6 +354,11 @@ class AppStrings {
   static const String settingsNotActive = 'Tidak aktif';
   static const String settingsSetUp = 'Atur';
   static const String settingsOpenSystem = 'Buka pengaturan sistem';
+  static const String settingsSetExact = 'Atur alarm tepat waktu';
+  static const String settingsChecking = 'Memeriksa…';
+  static const String settingsCheckFailed = 'Tidak dapat diperiksa';
+  static const String settingsSaveFailed =
+      'Pengaturan gagal disimpan. Coba lagi.';
   static const String settingsGuide = 'Panduan agar pengingat tidak terlewat';
   static const String settingsGuideLabel = 'Contoh: Samsung (One UI)';
   static const String settingsAbout = 'Tentang Aplikasi';

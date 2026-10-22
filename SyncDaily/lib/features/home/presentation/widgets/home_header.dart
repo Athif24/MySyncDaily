@@ -28,18 +28,25 @@ class HomeHeader extends StatelessWidget {
     return Row(
       children: [
         Semantics(
+          container: true,
           button: true,
           label: AppStrings.settingsTitle,
-          child: Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: () => openSettingsPage(context),
-              child: SizedBox(
-                height: AppSizes.avatar,
-                width: AppSizes.avatar,
-                child: AppAvatar(name: userName, size: AppSizes.avatar),
+          onTap: () => openSettingsPage(context),
+          // Avatar punya label sendiri (nama pengguna). Kalau tidak dikecualikan,
+          // label itu menyatu dengan label tombol dan pembaca layar membaca
+          // dua label sekaligus.
+          child: ExcludeSemantics(
+            child: Material(
+              color: Colors.transparent,
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () => openSettingsPage(context),
+                child: SizedBox(
+                  height: AppSizes.avatar,
+                  width: AppSizes.avatar,
+                  child: AppAvatar(name: userName, size: AppSizes.avatar),
+                ),
               ),
             ),
           ),

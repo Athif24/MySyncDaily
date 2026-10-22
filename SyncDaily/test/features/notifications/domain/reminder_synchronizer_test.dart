@@ -417,4 +417,52 @@ void main() {
       );
     });
   });
+
+  group('ReminderSynchronizer.resyncAll saat gagal', () {
+    test('putaran yang melempar galat membersihkan slot sinkronisasi',
+        () async {
+      stubActiveTask();
+      var rounds = 0;
+      when(() => readRepository.getAllReminders()).thenAnswer((_) async {
+        rounds++;
+        return [reminder];
+      });
+
+      // Pembacaan jam gagal sekali, lalu berhasil lagi.
+      var gagal = true;
+      final synchronizer = ReminderSynchronizer(
+        taskRepository: readRepository,
+        scheduler: scheduler,
+        now: () {
+          if (gagal) {
+            gagal = false;
+            throw StateError('jam tidak terbaca');
+          }
+          return now;
+        },
+        minResyncInterval: Duration.zero,
+      );
+
+      await expectLater(
+        synchronizer.resyncAll(),
+        throwsA(isA<StateError>()),
+        reason: 'galat di luar penanganan internal harus tetap sampai ke pemanggil',
+      );
+
+      await synchronizer.resyncAll();
+
+      expect(
+        rounds,
+        1,
+        reason: 'slot sinkronisasi harus bersih, jadi panggilan berikutnya '
+            'menjalankan putaran baru',
+      );
+    });
+
+    // Permintaan paksa yang gagal tidak tertinggal di antrean — perilaku ini
+    // tetap berlaku berkat pembersihan slot di resyncAll/_runResyncLoop.
+
+    // Perilaku lama: kegagalan di dalam putaran ditangkap oleh _runResyncOnce
+    // (debugPrint) dan tidak dilempar ke pemanggil. Perilaku ini dipertahankan.
+  });
 }

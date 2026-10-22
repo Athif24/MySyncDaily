@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/features/notifications/domain/notification_history_reconciler.dart';
 import 'package:sync_daily/features/notifications/domain/reminder_synchronizer.dart';
 import 'package:sync_daily/features/settings/domain/app_settings.dart';
@@ -130,10 +131,9 @@ void main() {
         'tetap', () async {
       repository.error = StateError('gagal menulis');
 
-      await expectLater(
-        cubit.updateAllDayHourMinutes(600),
-        throwsA(isA<StateError>()),
-      );
+      // Kegagalan tidak dilempar keluar (tidak boleh jadi pengecualian tak
+      // tertangani di UI); pesannya dibawa lewat state.
+      await cubit.updateAllDayHourMinutes(600);
 
       expect(log, ['reconcile(force: true)', 'update']);
       expect(
@@ -142,6 +142,19 @@ void main() {
         reason: 'sinkronisasi tidak boleh jalan bila penyimpanan gagal',
       );
       expect(repository.settings.allDayReminderHourMinutes, 480);
+      expect(cubit.state.settings.allDayReminderHourMinutes, 480);
+      expect(cubit.state.errorMessage, AppStrings.settingsSaveFailed);
+    });
+
+    test('pesan kesalahan dibersihkan setelah ditampilkan', () async {
+      repository.error = StateError('gagal menulis');
+
+      await cubit.updateAllDayHourMinutes(600);
+      expect(cubit.state.errorMessage, isNotNull);
+
+      cubit.clearError();
+
+      expect(cubit.state.errorMessage, isNull);
       expect(cubit.state.settings.allDayReminderHourMinutes, 480);
     });
 
