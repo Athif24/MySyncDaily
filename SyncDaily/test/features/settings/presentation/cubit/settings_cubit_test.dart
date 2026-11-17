@@ -61,6 +61,9 @@ class _FakeSettingsRepository implements AppSettingsRepository {
   /// Bila diisi, `update` melempar galat ini.
   Object? error;
 
+  /// Benar bila masih ada yang berlangganan [stream] (mis. kubit yang hidup).
+  bool get hasListener => _controller.hasListener;
+
   @override
   AppSettings get settings => _settings;
 
@@ -212,6 +215,37 @@ void main() {
       expect(cubit.state.settings.allDayReminderHourMinutes, 600);
       expect(cubit.state.errorMessage, AppStrings.settingsScheduleUpdateFailed);
       expect(cubit.state.errorMessage, isNot(AppStrings.settingsSaveFailed));
+    });
+  });
+
+  group('SettingsCubit.close', () {
+    test('membatalkan langganan stream dan tidak ada emit setelah ditutup',
+        () async {
+      final states = <SettingsState>[];
+      final ownSub = cubit.stream.listen(states.add);
+      addTearDown(ownSub.cancel);
+      expect(
+        repository.hasListener,
+        isTrue,
+        reason: 'sebelum ditutup, kubit berlangganan stream repository',
+      );
+
+      await cubit.close();
+      // Bukan waktu nyata: cukup mengalirkan mikro-tugas yang tertunda.
+      await pumpEventQueue();
+
+      expect(
+        repository.hasListener,
+        isFalse,
+        reason: 'close() harus membatalkan langganan stream repository',
+      );
+
+      // Bila langganan benar-benar dibatalkan, emit dari repository tidak lagi
+      // sampai ke kubit (kalau sampai, Cubit melempar karena sudah ditutup).
+      await repository.update(const AppSettings(allDayReminderHourMinutes: 700));
+      await pumpEventQueue();
+      expect(states, isEmpty);
+      expect(cubit.isClosed, isTrue);
     });
   });
 }

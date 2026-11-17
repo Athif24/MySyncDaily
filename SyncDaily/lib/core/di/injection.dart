@@ -136,6 +136,9 @@ Future<void> configureDependencies({
       reconciler: getIt<NotificationHistoryReconciler>(),
       synchronizer: getIt<ReminderSynchronizer>(),
     ),
+    // Kubit berlangganan stream repository; tutup saat getIt melepasnya
+    // (mis. `getIt.reset()` di tes) supaya langganan tidak bocor.
+    dispose: (cubit) => cubit.close(),
   );
 
   if (kDebugMode) {
