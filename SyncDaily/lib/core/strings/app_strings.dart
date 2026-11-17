@@ -359,6 +359,14 @@ class AppStrings {
   static const String settingsCheckFailed = 'Tidak dapat diperiksa';
   static const String settingsSaveFailed =
       'Pengaturan gagal disimpan. Coba lagi.';
+
+  /// Pesan saat jam tersimpan, tetapi penjadwalan ulang pengingat gagal.
+  ///
+  /// Pemicu penjadwalan ulang utama selain perubahan jam ini adalah membuka
+  /// aplikasi (lihat [main.dart]) dan perubahan tugas (via [ReminderSynchronizer]).
+  /// Jadi jadwal bisa diperbarui saat aplikasi dibuka kembali.
+  static const String settingsScheduleUpdateFailed =
+      'Jam tersimpan, tetapi jadwal pengingat belum diperbarui. Coba buka aplikasi kembali untuk memperbarui jadwal.';
   static const String settingsGuide = 'Panduan agar pengingat tidak terlewat';
   static const String settingsGuideLabel = 'Contoh: Samsung (One UI)';
   static const String settingsAbout = 'Tentang Aplikasi';

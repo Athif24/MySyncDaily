@@ -13,6 +13,7 @@ import 'package:sync_daily/features/notifications/domain/reminder_synchronizer.d
 import 'package:sync_daily/features/settings/domain/app_settings.dart';
 import 'package:sync_daily/features/settings/domain/app_settings_repository.dart';
 import 'package:sync_daily/features/settings/presentation/cubit/settings_cubit.dart';
+import 'package:sync_daily/core/widgets/latar_layar.dart';
 import 'package:sync_daily/features/settings/presentation/pages/settings_page.dart';
 import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
@@ -492,6 +493,17 @@ void main() {
 
       final headerAfter = tester.getTopLeft(find.text(AppStrings.settingsTitle));
       expect(headerAfter, headerBefore);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('halaman Pengaturan memakai LayarLatar dan Scaffold transparan',
+        (tester) async {
+      await pumpSettings(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LayarLatar), findsOneWidget);
+      final scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
+      expect(scaffold.backgroundColor, Colors.transparent);
       expect(tester.takeException(), isNull);
     });
   });

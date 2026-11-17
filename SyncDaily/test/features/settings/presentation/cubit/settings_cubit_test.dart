@@ -20,10 +20,13 @@ class _RecordingReconciler extends NotificationHistoryReconciler {
         );
 
   final List<String> log;
+  Object? error;
 
   @override
   Future<void> reconcile({bool force = false}) async {
     log.add('reconcile(force: $force)');
+    final e = error;
+    if (e != null) throw e;
   }
 }
 
@@ -36,10 +39,13 @@ class _RecordingSynchronizer extends ReminderSynchronizer {
         );
 
   final List<String> log;
+  Object? error;
 
   @override
   Future<void> resyncAll({bool force = false}) async {
     log.add('resyncAll(force: $force)');
+    final e = error;
+    if (e != null) throw e;
   }
 }
 
@@ -177,6 +183,35 @@ void main() {
       addTearDown(lain.close);
 
       expect(lain.state.settings.allDayReminderHourMinutes, 1230);
+    });
+
+    test('bila reconcile gagal, nilai tidak berubah dan pesan gagal simpan muncul',
+        () async {
+      reconciler.error = StateError('gagal reconcile');
+      await cubit.updateAllDayHourMinutes(600);
+      expect(repository.settings.allDayReminderHourMinutes, 480);
+      expect(cubit.state.settings.allDayReminderHourMinutes, 480);
+      expect(cubit.state.errorMessage, AppStrings.settingsSaveFailed);
+    });
+
+    test('bila simpan gagal, nilai tidak berubah dan pesan gagal simpan muncul',
+        () async {
+      repository.error = StateError('gagal menulis');
+      await cubit.updateAllDayHourMinutes(600);
+      expect(repository.settings.allDayReminderHourMinutes, 480);
+      expect(cubit.state.settings.allDayReminderHourMinutes, 480);
+      expect(cubit.state.errorMessage, AppStrings.settingsSaveFailed);
+    });
+
+    test(
+        'bila resyncAll gagal setelah jam tersimpan, nilai berubah dan pesan jadwal belum diperbarui',
+        () async {
+      synchronizer.error = StateError('gagal resync');
+      await cubit.updateAllDayHourMinutes(600);
+      expect(repository.settings.allDayReminderHourMinutes, 600);
+      expect(cubit.state.settings.allDayReminderHourMinutes, 600);
+      expect(cubit.state.errorMessage, AppStrings.settingsScheduleUpdateFailed);
+      expect(cubit.state.errorMessage, isNot(AppStrings.settingsSaveFailed));
     });
   });
 }

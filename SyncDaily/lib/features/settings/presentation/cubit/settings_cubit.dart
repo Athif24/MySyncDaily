@@ -36,20 +36,30 @@ class SettingsCubit extends Cubit<SettingsState> {
   /// Mengubah jam bunyi item seharian.
   ///
   /// Kegagalan tidak boleh menghentikan aplikasi: pesan kesalahan dibawa lewat
-  /// [SettingsState.errorMessage] supaya layar bisa menampilkan snackbar,
-  /// sedangkan nilai jam yang tampil tetap nilai lama (tidak berubah).
+  /// [SettingsState.errorMessage] supaya layar bisa menampilkan snackbar.
+  /// - Bila gagal sebelum/jelang simpan: nilai tetap, pesan gagal simpan.
+  /// - Bila jam sudah tersimpan tetapi [ReminderSynchronizer.resyncAll] gagal:
+  ///   nilai berubah, pesan jujur bahwa jadwal belum diperbarui (bisa dipulihkan
+  ///   saat aplikasi dibuka kembali atau perubahan tugas).
   Future<void> updateAllDayHourMinutes(int minutes) async {
     final old = _repository.settings;
     final clamped = minutes.clamp(0, 1439);
+    var saved = false;
     try {
       // (E): build history with OLD hour first, save new, resyncAll(force:true)
       // Paksa dipakai agar riwayat tidak dilewati throttle 5 detik: tanpa itu,
       // riwayat yang harus dibangun dengan jam LAMA bisa terlewat.
       await _reconciler.reconcile(force: true);
       await _repository.update(old.copyWith(allDayReminderHourMinutes: clamped));
+      saved = true;
       await _synchronizer.resyncAll(force: true);
     } catch (_) {
       if (isClosed) {
+        return;
+      }
+      if (saved) {
+        emit(state.copyWith(
+            errorMessage: AppStrings.settingsScheduleUpdateFailed));
         return;
       }
       emit(state.copyWith(errorMessage: AppStrings.settingsSaveFailed));
